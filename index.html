@@ -10,6 +10,10 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="logo.png" type="image/png">
+<link rel="apple-touch-icon" href="logo.png">
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="המתכונים שלי">
@@ -111,7 +115,7 @@
                 <input type="text" id="recipeTitle" placeholder="שם המנה" style="margin-bottom:10px; font-weight:bold; font-size:18px;">
                 <select id="recipeCategory" style="margin-bottom:10px;"></select>
                 <input type="text" id="recipeSource" placeholder="ממי המתכון? (למשל: דודה גניה, הרבנית קנייבסקי...)" style="margin-bottom:10px;">
-                
+                <input type="text" id="recipeTags" placeholder="תגיות (למשל: חלבי, מהיר, לשבת...)" style="width:100%; padding:12px; margin-bottom:15px; border:2px solid #eee; border-radius:10px; font-family:inherit; font-size:16px; box-sizing:border-box;">
                 <button class="btn-primary" style="margin:10px 0; background:#eee; color:#333;" onclick="document.getElementById('coverInput').click()">📷 צילום מנה מוכנה</button>
                 <input type="file" id="coverInput" style="display:none" onchange="previewImg(this, 'coverPreview')">
                 <img id="coverPreview" style="width:100%; display:none; border-radius:15px; margin-top:10px;">
@@ -127,10 +131,16 @@
                          <p style="font-size:12px; color:var(--text-muted); text-align:center; margin: 5px 0 0 0;">(התמונה תשמר בנוסף לטקסט)</p>
                     </div>
 
-                    <label style="font-weight:bold; color:var(--primary-color);">🛒 מצרכים:</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <label style="font-weight:bold; color:var(--primary-color); margin: 0;">🛒 מצרכים:</label>
+                        <button type="button" onclick="insertTitle('recipeIngredients')" style="background:none; border:none; color:#ff4757; font-weight:bold; cursor:pointer; font-size:14px;">+ הוסף כותרת שכבה</button>
+                    </div>
                     <textarea id="recipeIngredients" placeholder=" אמוש, הקלידי מצרך בכל שורה..." style="height:120px; margin-bottom:15px;"></textarea>
                     
-                    <label style="font-weight:bold; color:var(--primary-color);">👩‍🍳 אופן ההכנה:</label>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <label style="font-weight:bold; color:var(--primary-color); margin: 0;">👩‍🍳 אופן ההכנה:</label>
+                        <button type="button" onclick="insertTitle('recipeInstructions')" style="background:none; border:none; color:#ff4757; font-weight:bold; cursor:pointer; font-size:14px;">+ הוסף כותרת שכבה</button>
+                    </div>
                     <textarea id="recipeInstructions" placeholder="אמוש, הקלידי את שלבי ההכנה..." style="height:150px;"></textarea>
                 </div>
                 
@@ -156,6 +166,7 @@
                         <h1 id="viewTitle" style="margin:0;"></h1>
                         <div id="viewCategory" style="color:var(--text-muted); margin-top:5px; font-weight:bold;"></div>
                         <div id="viewSource" style="color:var(--primary-color); font-weight:bold; margin-top:5px; display:none;"></div>
+                   <div id="viewTags" style="font-size: 14px; margin-bottom: 15px; font-weight: bold; display: flex; flex-wrap: wrap; gap: 8px;"></div>
                     </div>
                     <img id="viewCover" class="recipe-thumbnail" style="display:none;" title="לחצי להגדלה">
                 </div>

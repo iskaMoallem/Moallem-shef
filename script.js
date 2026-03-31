@@ -1,6 +1,6 @@
 const DB_NAME = 'MomRecipesDB_v4', STORE = 'recipes';
 let db, allRecipes = [], curId = null, curCov = null, curCont = null, recipeType = 'text', showFavoritesOnly = false;
-const defaultCats = ['עוגות חלביות','שבת','צהורים','סלטים','בשר','עוגות פרווה','אחר'];
+const defaultCats = ['עוגות חלביות','שבת','צהרים','סלטים','בשר','עוגות פרווה','אחר'];
 let categories = JSON.parse(localStorage.getItem('recipeCats')) || defaultCats;
 let tInt, tEnd, audioCtx, alarmInterval, autoStopTimeout, wakeLock = null;
 let currentIngredients = [], currentInstructions = [];
@@ -101,11 +101,16 @@ function loadRecipes() {
     };
 }
 
-async function requestWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (err) {} }
+async function requestWakeLock() { 
+    try { 
+        if ('wakeLock' in navigator && !wakeLock) { 
+            wakeLock = await navigator.wakeLock.request('screen'); 
+        } 
+    } catch (err) {} 
+}
 function releaseWakeLock() { if (wakeLock !== null) wakeLock.release().then(() => wakeLock = null); }
 function openScreen(id) { const s = document.getElementById(id); s.style.display = 'flex'; setTimeout(() => s.classList.add('active'), 10); }
 function hideScreens() { document.querySelectorAll('.view-screen').forEach(s => { s.classList.remove('active'); setTimeout(() => { if(!s.classList.contains('active')) s.style.display='none'; }, 400); }); releaseWakeLock(); }
-
 function showRecipe(id) {
     curId = id;
     requestWakeLock();
@@ -115,38 +120,68 @@ function showRecipe(id) {
         document.getElementById('viewCategory').innerText = r.category;
         document.getElementById('viewSource').innerText = r.source ? `ממי: ${r.source}` : '';
         document.getElementById('viewSource').style.display = r.source ? 'block' : 'none';
+        
+        const vTags = document.getElementById('viewTags');
+        if (vTags) {
+            if (r.tags && r.tags.trim() !== '') {
+                vTags.innerHTML = r.tags.split(',').map(t => `<span style="background:#ffeaa7; padding:4px 10px; border-radius:15px; color:#d35400;">#${t.trim()}</span>`).join('');
+                vTags.style.display = 'flex';
+            } else { vTags.style.display = 'none'; }
+        }
+
         const vCover = document.getElementById('viewCover');
         if (r.cover) { vCover.src = r.cover; vCover.style.display = 'block'; vCover.onclick = () => expandImage(r.cover); } 
         else { vCover.style.display = 'none'; }
+        
         const insList = document.getElementById('instructionsList');
         const viewTextDiv = document.getElementById('viewText');
         const vContentImg = document.getElementById('viewContentImg');
         const smartNotice = document.getElementById('smartNotice'); 
+        
         insList.innerHTML = '';
         vContentImg.style.display = 'none'; 
         viewTextDiv.style.display = 'none';
         if(smartNotice) smartNotice.style.display = 'none';
         document.getElementById('multiplierControls').style.display = 'none';
+        
         if (r.contentImg) {
             vContentImg.src = r.contentImg;
             vContentImg.style.display = 'block';
             vContentImg.onclick = () => expandImage(r.contentImg);
             if (r.type === 'image' && smartNotice) { smartNotice.style.display = 'flex'; }
         }
+        
         if (r.type === 'text' && r.text) {
             const parts = r.text.split(/\n---\n/);
             currentIngredients = parts[0] ? parts[0].split('\n').filter(l => l.trim()) : [];
             currentInstructions = parts.length > 1 ? parts[1].split('\n').filter(l => l.trim()) : [];
+            
             if (currentIngredients.length > 0 || currentInstructions.length > 0) {
                 viewTextDiv.style.display = 'flex';
                 document.getElementById('multiplierControls').style.display = currentIngredients.length > 0 ? 'flex' : 'none';
                 renderIngredients(1, document.querySelectorAll('.mult-btn')[1]);
-                currentInstructions.forEach((line, index) => {
+                
+                let stepCounter = 1; // מונה שלבי ההכנה
+                
+                currentInstructions.forEach((line) => {
+                    line = line.trim();
+                    if(!line) return;
+                    
                     const d = document.createElement('div');
-                    d.className = 'recipe-line instruction-step';
-                    d.innerHTML = `<b class="step-num">${index + 1}</b> <span>${line}</span>`;
-                    d.onclick = () => d.classList.toggle('crossed');
-                    insList.appendChild(d);
+                    
+                    // --- בדיקה אם מדובר בכותרת שכבה בהכנה ---
+                    if (line.startsWith('==') && line.endsWith('==')) {
+                        d.style = "font-weight: 800; color: #ff4757; margin-top: 20px; font-size: 18px; border-bottom: 2px solid #ffeaa7; padding-bottom: 5px; margin-bottom: 10px;";
+                        d.innerText = line.replace(/==/g, '').trim();
+                        stepCounter = 1; // מאפס את הספירה! (מלית מתחילה שוב משלב 1)
+                        insList.appendChild(d);
+                    } else {
+                        d.className = 'recipe-line instruction-step';
+                        d.innerHTML = `<b class="step-num">${stepCounter}</b> <span>${line}</span>`;
+                        d.onclick = () => d.classList.toggle('crossed');
+                        stepCounter++;
+                        insList.appendChild(d);
+                    }
                 });
                 document.getElementById('instructionsArea').style.display = currentInstructions.length > 0 ? 'block' : 'none';
             }
@@ -155,6 +190,7 @@ function showRecipe(id) {
         openScreen('viewScreen');
     };
 }
+
 
 function expandImage(src) {
     const viewer = document.createElement('div');
@@ -167,7 +203,6 @@ function expandImage(src) {
     document.body.appendChild(viewer);
     setTimeout(() => viewer.style.opacity = '1', 10);
 }
-
 function renderIngredients(multiplier, btnElement) {
     if(btnElement) {
         document.querySelectorAll('.mult-btn').forEach(b => b.classList.remove('active'));
@@ -175,7 +210,19 @@ function renderIngredients(multiplier, btnElement) {
     }
     const ingList = document.getElementById('ingredientsList'); ingList.innerHTML = '';
     currentIngredients.forEach(line => {
-        if(!line.trim()) return;
+        line = line.trim();
+        if(!line) return;
+        
+        // --- בדיקה אם מדובר בכותרת שכבה ---
+        if (line.startsWith('==') && line.endsWith('==')) {
+            const titleDiv = document.createElement('div');
+            titleDiv.style = "font-weight: 800; color: #ff4757; margin-top: 15px; margin-bottom: 5px; font-size: 18px; border-bottom: 2px solid #ffeaa7; padding-bottom: 5px; width: 100%;";
+            titleDiv.innerText = line.replace(/==/g, '').trim(); // מנקה את סימני השווה ומציג רק את המילה
+            ingList.appendChild(titleDiv);
+            return; // עוצר כאן ועובר לשורה הבאה כדי שלא יוסיף 'וי' לכותרת
+        }
+        // ------------------------------------
+
         let mod = line.replace(/½|1\/2/g, "0.5").replace(/¼|1\/4/g, "0.25").replace(/¾|3\/4/g, "0.75");
         mod = mod.replace(/\d+(\.\d+)?/g, (m) => {
             let res = parseFloat(m) * multiplier;
@@ -187,18 +234,20 @@ function renderIngredients(multiplier, btnElement) {
         ingList.appendChild(d);
     });
 }
-
 function saveRecipe() {
     const title = document.getElementById('recipeTitle').value;
     if(!title) return alert('נא להזין שם');
     const ing = document.getElementById('recipeIngredients').value;
     const ins = document.getElementById('recipeInstructions').value;
+    const tags = document.getElementById('recipeTags').value; // מזהה את התגיות
     const rText = recipeType === 'text' ? (ing + "\n---\n" + ins) : "\n---\n";
-    const r = { title, category: document.getElementById('recipeCategory').value, source: document.getElementById('recipeSource').value, type: recipeType, text: rText, cover: curCov, contentImg: curCont };
+    
+    // שומר את התגיות במסד הנתונים
+    const r = { title, category: document.getElementById('recipeCategory').value, source: document.getElementById('recipeSource').value, tags: tags, type: recipeType, text: rText, cover: curCov, contentImg: curCont };
+    
     if(curId) r.id = curId;
     db.transaction(STORE,'readwrite').objectStore(STORE).put(r).onsuccess = () => { hideScreens(); loadRecipes(); };
 }
-
 function previewImg(input, tid) {
     if (!input.files[0]) return;
     const reader = new FileReader();
@@ -228,6 +277,7 @@ function openAddMode() {
     curId = null; curCov = null; curCont = null;
     document.getElementById('addScreenTitle').innerText = 'מתכון חדש 📝';
     document.querySelectorAll('#addScreen input, #addScreen textarea').forEach(i => i.value = '');
+    document.getElementById('recipeTags').value = ''; // מנקה את התגיות הישנות
     document.getElementById('coverPreview').style.display = 'none';
     document.getElementById('contentPreview').style.display = 'none';
     updateEditUIMixed(false);
@@ -242,6 +292,7 @@ function openEditMode() {
         document.getElementById('recipeTitle').value = r.title;
         document.getElementById('recipeCategory').value = r.category;
         document.getElementById('recipeSource').value = r.source || '';
+        document.getElementById('recipeTags').value = r.tags || ''; // טוען את התגיות הקיימות
         if (r.text) {
             const parts = r.text.split(/\n---\n/);
             document.getElementById('recipeIngredients').value = parts[0] || '';
@@ -255,33 +306,6 @@ function openEditMode() {
         hideScreens(); 
         setTimeout(() => openScreen('addScreen'), 450);
     };
-}
-
-function filterRecipes() {
-    const s = document.getElementById('searchInput').value.toLowerCase();
-    const cat = document.getElementById('categoryFilter').value;
-    const cards = document.querySelectorAll('.recipe-card');
-    let foundInCat = 0, foundInGeneral = 0;
-    
-    allRecipes.forEach((r, i) => {
-        const isMatch = r.title.toLowerCase().includes(s) || (r.text && r.text.toLowerCase().includes(s)) || (r.source && r.source.toLowerCase().includes(s));
-        const isFavMatch = showFavoritesOnly ? r.isFavorite : true;
-
-        if (isMatch && isFavMatch) {
-            if (cat === 'all' || r.category === cat) { cards[i].style.display = 'block'; foundInCat++; } 
-            else { cards[i].style.display = 'none'; foundInGeneral++; }
-        } else { cards[i].style.display = 'none'; }
-    });
-    
-    const existingMsg = document.getElementById('no-match-msg');
-    if (existingMsg) existingMsg.remove();
-    
-    if (foundInCat === 0 && foundInGeneral > 0) {
-        const msg = document.createElement('div'); msg.id = 'no-match-msg';
-        msg.style = "grid-column: 1/-1; text-align: center; padding: 20px; background: #fff3cd; border-radius: 15px; color: #856404;";
-        msg.innerHTML = `לא נמצא ב"${cat}", אבל מצאתי ${foundInGeneral} מתכונים בקטגוריות אחרות.<br><button onclick="document.getElementById('categoryFilter').value='all'; filterRecipes();" style="margin-top:10px; border:none; background:#856404; color:white; padding:5px 15px; border-radius:10px; cursor:pointer;">הצג הכל</button>`;
-        document.getElementById('recipeList').appendChild(msg);
-    }
 }
 
 function toggleFavorite(e, id) {
@@ -309,7 +333,46 @@ function toggleFavoritesView() {
     }
     filterRecipes(); 
 }
+function filterRecipes() {
+    const s = document.getElementById('searchInput').value.toLowerCase();
+    const cat = document.getElementById('categoryFilter').value;
+    const cards = document.querySelectorAll('.recipe-card');
+    let foundInCat = 0, foundInGeneral = 0;
+    
+    allRecipes.forEach((r, i) => {
+        // חיפוש חכם שכולל: שם, טקסט, מקור ותגיות!
+        const isMatch = r.title.toLowerCase().includes(s) || 
+                        (r.text && r.text.toLowerCase().includes(s)) || 
+                        (r.source && r.source.toLowerCase().includes(s)) ||
+                        (r.tags && r.tags.toLowerCase().includes(s)); 
+                        
+        const isFavMatch = showFavoritesOnly ? r.isFavorite : true;
 
+        if (isMatch && isFavMatch) {
+            if (cat === 'all' || r.category === cat) { 
+                cards[i].style.display = 'block'; 
+                foundInCat++; 
+            } else { 
+                cards[i].style.display = 'none'; 
+                foundInGeneral++; 
+            }
+        } else { 
+            cards[i].style.display = 'none'; 
+        }
+    });
+    
+    // ניהול הודעת "לא נמצא"
+    const existingMsg = document.getElementById('no-match-msg');
+    if (existingMsg) existingMsg.remove();
+    
+    if (foundInCat === 0 && foundInGeneral > 0) {
+        const msg = document.createElement('div'); 
+        msg.id = 'no-match-msg';
+        msg.style = "grid-column: 1/-1; text-align: center; padding: 20px; background: #fff3cd; border-radius: 15px; color: #856404;";
+        msg.innerHTML = `לא נמצא ב"${cat}", אבל מצאתי ${foundInGeneral} מתכונים בקטגוריות אחרות.<br><button onclick="document.getElementById('categoryFilter').value='all'; filterRecipes();" style="margin-top:10px; border:none; background:#856404; color:white; padding:5px 15px; border-radius:10px; cursor:pointer;">הצג הכל</button>`;
+        document.getElementById('recipeList').appendChild(msg);
+    }
+}
 function startVoiceSearch() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) return alert("הדפדפן לא תומך בחיפוש קולי");
@@ -508,4 +571,21 @@ function updateEditUIMixed(showImg) {
         if(showImg && curCont) { mixedImg.src = curCont; mixedArea.style.display = 'block'; } 
         else { mixedArea.style.display = 'none'; }
     }
+}
+
+// --- פונקציה להוספת כותרות ביניים למתכונים מורכבים ---
+function insertTitle(textareaId) {
+    const titleName = prompt("איזו כותרת להוסיף? (למשל: תחתית, מלית, לציפוי)");
+    if (!titleName) return; // אם היא עשתה ביטול, אל תעשה כלום
+    
+    const textarea = document.getElementById(textareaId);
+    const textToInsert = `\n== ${titleName} ==\n`;
+    
+    // מוסיף את הכותרת איפה שהסמן נמצא בתוך תיבת הטקסט
+    const cursorPos = textarea.selectionStart;
+    const textBefore = textarea.value.substring(0, cursorPos);
+    const textAfter = textarea.value.substring(cursorPos);
+    
+    textarea.value = textBefore + textToInsert + textAfter;
+    textarea.focus(); // מחזיר את הסמן לתיבה כדי שאמא תוכל להמשיך להקליד
 }
