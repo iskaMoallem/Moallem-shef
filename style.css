@@ -1,0 +1,268 @@
+:root {
+    --bg-color: #F9F4EE; 
+    --card-bg: #FFFFFF; 
+    --input-bg: #F1E9E0; 
+    --primary-color: #6DB9BB; 
+    --text-color: #5D4037; 
+    --text-muted: #8D6E63;
+    --shadow-sm: 0 4px 12px rgba(93, 64, 55, 0.08); 
+    --border-radius: 20px;
+}
+
+body.dark-mode { 
+    --bg-color: #121212; 
+    --card-bg: #1E1E1E; 
+    --text-color: #E8EAED; 
+    --input-bg: #2D2D2D; 
+}
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    background-image: radial-gradient(#ede3d5 0.5px, transparent 0.5px);
+    background-size: 20px 20px;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', 'Segoe UI', Helvetica, Arial, sans-serif;
+    margin: 0; 
+    padding: 0;
+}
+
+h1, h2, h3 { color: var(--text-color); }
+.container { max-width: 800px; margin: 0 auto; padding: 0 16px; }
+
+header { 
+    background: var(--card-bg); padding: 12px 0; 
+    box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 100; border-bottom: 2px solid #E3D7C8;
+}
+.header-content { display: flex; justify-content: space-between; align-items: center; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.app-logo { height: 50px; width: auto; border-radius: 50%; box-shadow: var(--shadow-sm); object-fit: contain; }
+header h1 { font-size: 1.4rem; margin: 0; white-space: nowrap; }
+.header-buttons { display: flex; gap: 8px; }
+
+.icon-btn { 
+    background: var(--input-bg); border: none; width: 42px; height: 42px; 
+    border-radius: 14px; cursor: pointer; font-size: 18px; display: flex; 
+    align-items: center; justify-content: center; color: var(--text-color); transition: 0.2s;
+}
+.icon-btn:active { background-color: var(--primary-color) !important; color: white; }
+
+@media (max-width: 500px) { .app-logo { height: 40px; } header h1 { font-size: 1.1rem; } }
+
+.controls { padding: 20px 0; display: flex; flex-direction: column; gap: 10px; }
+input, select, textarea { 
+    width: 100%; padding: 14px; border-radius: 12px; border: 2px solid transparent; 
+    background-color: var(--input-bg) !important; color: var(--text-color); font-size: 16px; box-sizing: border-box; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--primary-color) !important; outline: none; }
+
+.fab { 
+    position: fixed; bottom: 30px; left: 30px; width: 65px; height: 65px; 
+    border-radius: 22px; background: var(--primary-color); color: white; border: none; 
+    font-size: 32px; box-shadow: 0 10px 25px rgba(0,194,232,0.3); z-index: 99; cursor: pointer; 
+}
+.btn-primary { background: var(--primary-color); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: bold; font-size: 16px; }
+.btn-danger { background: #FF4757; color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; cursor: pointer; font-weight: bold; font-size: 16px; }
+
+.toggle-group { display: flex; background: var(--input-bg); padding: 4px; border-radius: 12px; margin: 15px 0; }
+.toggle-group button { flex: 1; border: none; padding: 10px; border-radius: 10px; background: transparent; cursor: pointer; }
+.toggle-group button.active { background: var(--card-bg); color: var(--primary-color); font-weight: bold; }
+
+#recipeList { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 20px; padding-bottom: 100px; }
+.recipe-card { background: var(--card-bg); border-radius: var(--border-radius); overflow: hidden; box-shadow: var(--shadow-sm); cursor: pointer; text-align: center; border: 1px solid #E3D7C8; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.recipe-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(93, 64, 55, 0.15); }
+.recipe-card img { width: 100%; height: 170px; object-fit: cover; background: #eee; filter: saturate(1.1); transition: transform 0.4s ease; }
+.recipe-card:hover img { transform: scale(1.05); }
+.recipe-card b { display: block; padding: 15px 10px; font-size: 1.1rem; }
+/* =========================================
+   מסכים צפים (קופצים למרכז במקום לעלות מלמטה)
+========================================= */
+.view-screen { 
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); 
+    backdrop-filter: blur(5px); display: none; z-index: 1000; 
+    /* השינוי כאן: ממקם את החלון באמצע המסך */
+    align-items: center; justify-content: center; 
+    opacity: 0; transition: opacity 0.3s ease; 
+}
+
+.view-screen.active { display: flex; opacity: 1; }
+
+.screen-container { 
+    background: var(--bg-color); 
+    width: 96%; /* תופס כמעט את כל רוחב מסך הטאבלט */
+    max-width: 1050px; /* הגדלנו משמעותית (מ-700 ל-1050) כדי לאפשר 2 עמודות מרווחות */
+    height: 88vh; /* קצת יותר גבוה כדי לחסוך עוד גלילה */
+    border-radius: 30px; 
+    display: flex; 
+    flex-direction: column; 
+    box-shadow: 0 15px 50px rgba(0,0,0,0.3); 
+    transform: scale(0.85); 
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease; 
+    overflow: hidden; 
+}
+
+.screen-content { 
+    /* התיקון לרווחים: 25px מלמעלה ולמטה, 35px מהצדדים יתנו המון אוויר לנשימה */
+    padding: 25px 35px; 
+    /* מאפשר גלילה רק בתוך האזור של הטקסט */
+    overflow-y: auto; 
+    flex-grow: 1; 
+    /* פקודה שנותנת תחושת גלילה חלקה של אפליקציה במסכי מגע (טאבלט) */
+    -webkit-overflow-scrolling: touch; 
+}
+.view-screen.active .screen-container { 
+    transform: scale(1); 
+    opacity: 1;
+}
+
+.screen-header { 
+    padding: 16px 20px; background: var(--card-bg); display: flex; 
+    justify-content: space-between; align-items: center; 
+    border-radius: 30px 30px 0 0; 
+}
+.recipe-line { padding: 12px 8px; font-size: 18px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.03); display: flex; gap: 10px; }
+.recipe-line.crossed { text-decoration: line-through; opacity: 0.4; }
+.step-num { background: var(--primary-color); color: white; min-width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.mult-btn { flex: 1; background: transparent; border: none; padding: 10px; border-radius: 8px; font-weight: bold; color: var(--text-muted); cursor: pointer; }
+.mult-btn.active { background: var(--card-bg); color: var(--primary-color); box-shadow: var(--shadow-sm); }
+@media (max-width: 700px) { #viewText { flex-direction: column !important; } }
+
+.settings-section { background: var(--card-bg); border-radius: 12px; margin-bottom: 12px; }
+.settings-section summary { padding: 16px; list-style: none; display: flex; flex-direction: row-reverse; justify-content: flex-end; align-items: center; gap: 15px; font-weight: bold; cursor: pointer; font-size: 18px; }
+.settings-section .arrow { font-size: 12px; transition: transform 0.3s ease; color: var(--primary-color); }
+.settings-section[open] .arrow { transform: rotate(180deg); }
+.section-body { padding: 16px; border-top: 1px solid rgba(0,0,0,0.05); }
+.calc-row { padding: 8px 0; border-bottom: 1px dashed rgba(0,0,0,0.1); }
+.cat-item { display: flex; justify-content: space-between; padding: 12px; background: var(--bg-color); margin-bottom: 8px; border-radius: 10px; }
+
+.timer-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(93, 64, 55, 0.5); backdrop-filter: blur(8px); display: none; z-index: 99999; justify-content: center !important; align-items: center !important; }
+.timer-overlay.active { display: flex !important; }
+.timer-card { background: var(--card-bg); padding: 40px; border-radius: 30px; width: 320px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); border: 4px solid var(--primary-color); margin: auto; position: relative; animation: timerPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.timer-close { position: absolute; top: 15px; left: 15px; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+.timer-icon { font-size: 40px; margin-bottom: 10px; }
+.timer-display { font-size: 48px; font-weight: bold; color: var(--primary-color); margin: 20px 0; font-variant-numeric: tabular-nums; }
+#timerMin { text-align: center; font-size: 24px; margin-bottom: 15px; border: 2px solid var(--input-bg); }
+@keyframes timerPop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes alert-bg { 0% { background: var(--bg-color); } 100% { background: #ffcccc; } }
+body.timer-alert { animation: alert-bg 0.5s infinite alternate; }
+
+.guide-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; opacity: 0; transition: opacity 0.3s ease; }
+.guide-overlay.active { display: flex; opacity: 1; }
+.guide-card { background: var(--card-bg); padding: 25px; border-radius: 25px; max-width: 650px; width: 95%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.4); animation: zoomIn 0.3s ease; }
+.guide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: right; }
+.guide-item { display: flex; gap: 12px; background: var(--input-bg); padding: 12px; border-radius: 15px; align-items: flex-start; }
+.guide-icon { font-size: 24px; min-width: 35px; }
+.guide-text strong { display: block; color: var(--primary-color); font-size: 14px; margin-bottom: 3px; }
+.guide-text { font-size: 13px; line-height: 1.4; margin: 0; }
+@keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (max-width: 600px) { .guide-grid { grid-template-columns: 1fr; } }
+
+#splashScreen { position: fixed; inset: 0; background-color: var(--bg-color); background-image: radial-gradient(#ede3d5 0.5px, transparent 0.5px); background-size: 20px 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999999; transition: opacity 0.6s ease, visibility 0.6s ease; }
+.splash-logo { width: 440px; height: auto; box-shadow: 0 20px 50px rgba(93, 64, 55, 0.3); animation: pulseLogo 1.5s infinite ease-in-out; border-radius: 15px; object-fit: contain;}
+@keyframes pulseLogo { 0% { transform: scale(0.95); opacity: 0.7; } 50% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.7; } }
+
+.recipe-view-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 15px; }
+.header-text-info { flex: 1; }
+.recipe-thumbnail { width: 90px; height: 90px; border-radius: 15px; object-fit: cover; box-shadow: var(--shadow-sm); cursor: pointer; border: 2px solid #fff; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.recipe-thumbnail:active { transform: scale(0.95); box-shadow: none; }
+.smart-notice { background: #e3f2fd; color: #0d47a1; padding: 14px; border-radius: 12px; margin-bottom: 20px; font-size: 15px; display: flex; align-items: center; border-right: 5px solid #2196f3; font-weight: bold; }
+
+/* =========================================
+   אפקט "מחברת אמיתית" (דף שורות) למתכונים 📓
+========================================= */
+#ingredientsArea, #instructionsArea {
+    background-color: #fffcf5 !important; /* צבע דף קרם-צהבהב עדין כמו מחברת ישנה */
+    background-image: 
+        /* פס שוליים אדום בצד ימין (כי אנחנו בעברית) */
+        linear-gradient(to left, transparent 45px, rgba(255, 110, 110, 0.4) 45px, rgba(255, 110, 110, 0.4) 47px, transparent 47px),
+        /* שורות תכלת חלשות לרוחב הדף */
+        repeating-linear-gradient(to bottom, transparent, transparent 38px, rgba(0, 150, 200, 0.15) 38px, rgba(0, 150, 200, 0.15) 39px) !important;
+    background-size: 100% 39px !important; /* מגדיר את גובה השורה במדויק */
+    background-attachment: local !important; /* גורם לשורות לגלול יחד עם הטקסט */
+    border: 1px solid #eaddcf !important;
+    box-shadow: 3px 5px 15px rgba(0,0,0,0.05) !important;
+    padding-right: 60px !important; /* מרווח בצד ימין כדי שהטקסט לא ידרוס את הפס האדום */
+    border-radius: 12px !important;
+}
+
+/* כדי שהטקסט ישב בדיוק על השורות של המחברת (כמו שכותבים ידנית) */
+.recipe-line {
+    line-height: 39px !important; /* בדיוק כמו גובה השורה שציירנו ברקע */
+    padding: 0 5px !important;
+    border-bottom: none !important; /* מבטלים את הקו האפור הרגיל כי יש קו כחול של המחברת */
+    margin: 0 !important;
+    align-items: center; 
+}
+
+/* רקע לכותרות כדי שלא "ייחתכו" על ידי פסי המחברת */
+#ingredientsArea h3, #instructionsArea h3 {
+    background: #fffcf5 !important; 
+    display: inline-block !important; 
+    padding: 0 10px !important;
+    margin-bottom: 5px !important;
+    border-bottom: none !important;
+    position: relative;
+    z-index: 2;
+    border-radius: 5px;
+}
+
+/* התאמה למצב לילה - שיישאר נעים לעין וירגיש כמו מחברת שחורה אלגנטית */
+body.dark-mode #ingredientsArea, body.dark-mode #instructionsArea {
+    background-color: #242424 !important;
+    background-image: 
+        linear-gradient(to left, transparent 45px, rgba(255, 100, 100, 0.2) 45px, rgba(255, 100, 100, 0.2) 47px, transparent 47px),
+        repeating-linear-gradient(to bottom, transparent, transparent 38px, rgba(255, 255, 255, 0.05) 38px, rgba(255, 255, 255, 0.05) 39px) !important;
+    border-color: #333 !important;
+}
+body.dark-mode #ingredientsArea h3, body.dark-mode #instructionsArea h3 {
+    background: #242424 !important;
+}
+/* =========================================
+   עיצוב ללוגו ברירת מחדל בכרטיסיית מתכון (מתוקן)
+========================================= */
+.recipe-card img.default-logo {
+    object-fit: contain !important; /* דואג שהלוגו יישאר בפרופורציות ולא ייחתך */
+    box-sizing: border-box !important; /* הפתרון: מונע מהריווח לנפח ולחתוך את התמונה */
+    padding: 30px !important; /* נותן "אוויר" נקי מסביב ללוגו */
+    background-color: #f8f1e7 !important; /* רקע שמנת עדין */
+    opacity: 0.7 !important; /* קצת שקיפות למראה של סימן מים */
+}
+
+/* אפקט קטן במעבר עכבר / לחיצה */
+.recipe-card:hover img.default-logo {
+    opacity: 1 !important;
+    transform: scale(1.05);
+}
+/* =========================================
+   עיצוב פיצ'ר מועדפים (לבבות) ❤️
+========================================= */
+/* מוודא שהלב יצוף בדיוק בתוך הכרטיסייה */
+.recipe-card { position: relative; } 
+
+.card-heart {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, background 0.2s;
+    z-index: 10;
+}
+
+.card-heart:active { transform: scale(0.8); }
+.card-heart.active { color: #ff4757; } /* לב אדום כשהוא מסומן */
+.card-heart:not(.active) { color: #aaa; filter: grayscale(100%); } /* לב אפור כשהוא לא */
+
+/* העיצוב של כפתור הלב למעלה בהדר כשהוא דלוק */
+.header-heart-active { 
+    background-color: #ff4757 !important; 
+    color: white !important; 
+    box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+}

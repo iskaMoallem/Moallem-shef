@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>המתכונים של אמא</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="המתכונים שלי">
+    <link rel="apple-touch-icon" href="logo.png">
+    <meta name="theme-color" content="#6DB9BB">
+</head>
+
+<body>
+    <div id="splashScreen">
+        <img src="logo.png" alt="לוגו" class="splash-logo">
+        <h2 style="color: var(--primary-color); margin-top: 20px;">טוען את הספר של אמוש...</h2>
+    </div>
+
+    <header>
+        <div class="container header-content">
+            <div class="header-right">
+                <img src="logo.png" alt="לוגו" class="app-logo"> 
+                <h1>Moallem Shef</h1>
+            </div>
+            <div class="header-buttons">
+
+                <button class="icon-btn" onclick="openGuide(false)">❓</button>
+                <button class="icon-btn" id="headerHeartBtn" onclick="toggleFavoritesView()" title="המועדפים שלי">🤍</button>
+                <button class="icon-btn" id="timerHeaderBtn" onclick="toggleTimerPanel()">⏱️</button>
+                <button class="icon-btn" onclick="toggleDarkMode()">🌙</button>
+                <button class="icon-btn" onclick="openScreen('calcScreen')">⚖️</button>
+                <button class="icon-btn" onclick="openScreen('settingsScreen')">⚙️</button>
+            </div>
+        </div>
+    </header>
+
+    <div id="activeTimerControls" style="display:none; margin-top: 10px;">
+        <button class="btn-secondary" onclick="cancelTimer()" style="background:#d7c9b8; border:none; padding:10px; border-radius:10px; width:100%;">ביטול ספירה ✖</button>
+    </div>
+
+    <button class="btn-danger stop-btn" onclick="stopTimer()" id="timerStopBtn" style="display:none; width:100%; padding:15px; font-size:20px;">הפסיקי צלצול 🔔</button>
+
+    <main class="container">
+        <div class="controls" style="gap: 15px;">
+            <select id="categoryFilter" onchange="filterRecipes()"></select>
+            <div style="position: relative; width: 100%;">
+                <input type="text" id="searchInput" placeholder="🔍 חיפוש חכם (שם, מצרך, או ממי המתכון)..." onkeyup="filterRecipes()">
+                <button onclick="startVoiceSearch()" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 22px; cursor: pointer;" title="חיפוש קולי">🎤</button>
+            </div>
+        </div>
+        <div id="recipeList"></div>
+    </main>
+
+    <button class="fab" onclick="openAddMode()">+</button>
+
+    <div id="calcScreen" class="view-screen">
+        <div class="screen-container">
+            <div class="screen-header">
+                <button class="icon-btn" onclick="hideScreens()">✖</button>
+                <h2>מחשבון המרות ⚖️</h2>
+            </div>
+            <div class="screen-content">
+                <input type="text" id="calcSearch" placeholder="🔍 חפשי מצרך (למשל: סוכר, קמח...)" onkeyup="filterCalc()">
+                <div id="calcAccordion" style="margin-top:15px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsScreen" class="view-screen">
+        <div class="screen-container">
+            <div class="screen-header"><button class="icon-btn" onclick="hideScreens()">✖</button><h2>הגדרות ⚙️</h2></div>
+            <div class="screen-content">
+                <details class="settings-section">
+                    <summary>ניהול קטגוריות <span class="arrow">▼</span></summary>
+                    <div class="section-body">
+                        <div id="catManagerList"></div>
+                        <button class="btn-primary" onclick="addCategory()" style="margin-top:10px; background:var(--input-bg); color:var(--text-color);">➕ הוספת קטגוריה</button>
+                    </div>
+                </details>
+                <details class="settings-section">
+                    <summary>גיבוי ושחזור נתונים <span class="arrow">▼</span></summary>
+                    <div class="section-body">
+                        <button class="btn-primary" onclick="exportData()" style="margin-bottom:10px;">📥 גיבוי למכשיר</button>
+                        <button class="btn-primary" style="background:#eee; color:#333;" onclick="document.getElementById('imp').click()">📤 שחזור מגיבוי</button>
+                        <input type="file" id="imp" style="display:none" onchange="importData(this)">
+                    </div>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <div id="addScreen" class="view-screen">
+        <div class="screen-container">
+            <div class="screen-header">
+                <button class="icon-btn" onclick="hideScreens()">✖</button>
+                <h2 id="addScreenTitle">מתכון חדש</h2>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button onclick="hideScreens()" style="background: #f1e9e0; color: #5d4037; border: none; padding: 8px 15px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 15px; height: 38px;">ביטול</button>
+                    <button class="btn-primary" onclick="saveRecipe()" style="width:auto; padding:8px 15px; height: 38px;">שמור</button>
+                </div>
+            </div>
+
+            <div class="screen-content">
+                <input type="text" id="recipeTitle" placeholder="שם המנה" style="margin-bottom:10px; font-weight:bold; font-size:18px;">
+                <select id="recipeCategory" style="margin-bottom:10px;"></select>
+                <input type="text" id="recipeSource" placeholder="ממי המתכון? (למשל: דודה גניה, הרבנית קנייבסקי...)" style="margin-bottom:10px;">
+                
+                <button class="btn-primary" style="margin:10px 0; background:#eee; color:#333;" onclick="document.getElementById('coverInput').click()">📷 צילום מנה מוכנה</button>
+                <input type="file" id="coverInput" style="display:none" onchange="previewImg(this, 'coverPreview')">
+                <img id="coverPreview" style="width:100%; display:none; border-radius:15px; margin-top:10px;">
+             
+                <div class="toggle-group">
+                    <button id="btnTypeText" class="active" onclick="handleTypeChange('text')">📝 הקלדה</button>
+                    <button id="btnTypeImage" onclick="handleTypeChange('image')">📸  צילום דף המתכון</button>
+                </div>
+               <div id="typeTextContainer">
+                    <div id="mixedImagePreviewArea" style="display:none; margin-bottom: 15px; border: 2px dashed rgba(0,0,0,0.1); padding: 10px; border-radius: 12px; position:relative;">
+                         <img id="contentPreviewMixed" style="width:100%; border-radius:10px;">
+                         <button onclick="removeContentImg()" style="position:absolute; top:5px; left:5px; background:rgba(255,0,0,0.7); color:white; border:none; border-radius:50%; width:25px; height:25px; cursor:pointer;">✕</button>
+                         <p style="font-size:12px; color:var(--text-muted); text-align:center; margin: 5px 0 0 0;">(התמונה תשמר בנוסף לטקסט)</p>
+                    </div>
+
+                    <label style="font-weight:bold; color:var(--primary-color);">🛒 מצרכים:</label>
+                    <textarea id="recipeIngredients" placeholder=" אמוש, הקלידי מצרך בכל שורה..." style="height:120px; margin-bottom:15px;"></textarea>
+                    
+                    <label style="font-weight:bold; color:var(--primary-color);">👩‍🍳 אופן ההכנה:</label>
+                    <textarea id="recipeInstructions" placeholder="אמוש, הקלידי את שלבי ההכנה..." style="height:150px;"></textarea>
+                </div>
+                
+                <div id="typeImageContainer" style="display:none;">
+                    <button class="btn-primary" style="background:#eee; color:#333;" onclick="document.getElementById('contentImgInput').click()">📸 צלמי את דף המתכון</button>
+                    <input type="file" id="contentImgInput" style="display:none" onchange="previewImg(this, 'contentPreview')">
+                    <img id="contentPreview" style="width:100%; display:none; border-radius:15px; margin-top:10px;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="viewScreen" class="view-screen">
+        <div class="screen-container">
+            <div class="screen-header">
+                <button class="icon-btn" onclick="hideScreens()">✖</button>
+                <button class="icon-btn" onclick="openEditMode()">✏️</button>
+            </div>
+            <div class="screen-content">
+                
+                <div class="recipe-view-header">
+                    <div class="header-text-info">
+                        <h1 id="viewTitle" style="margin:0;"></h1>
+                        <div id="viewCategory" style="color:var(--text-muted); margin-top:5px; font-weight:bold;"></div>
+                        <div id="viewSource" style="color:var(--primary-color); font-weight:bold; margin-top:5px; display:none;"></div>
+                    </div>
+                    <img id="viewCover" class="recipe-thumbnail" style="display:none;" title="לחצי להגדלה">
+                </div>
+
+                <div id="smartNotice" class="smart-notice" style="display:none;">
+                    <span>📖 המתכון הזה שמור כצילום מהמחברת. לחצי על התמונה להגדלה וקריאה נוחה.</span>
+                </div>
+                
+                <div id="multiplierControls" style="display:none; justify-content:center; gap:10px; margin-bottom:15px; background:rgba(0,194,232,0.1); padding:8px; border-radius:12px;">
+                    <button class="mult-btn" onclick="renderIngredients(0.5, this)">חצי כמות ➗</button>
+                    <button class="mult-btn active" onclick="renderIngredients(1, this)">כמות רגילה 🥣</button>
+                    <button class="mult-btn" onclick="renderIngredients(2, this)">כמות כפולה ✖️</button>
+                </div>
+
+                <div id="viewText" style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
+                    <div id="ingredientsArea" style="flex: 1; min-width: 280px; background: rgba(0,194,232,0.05); padding: 15px; border-radius: 15px; border-right: 5px solid var(--primary-color);">
+                        <h3 style="color: var(--primary-color); margin-top: 0; display: flex; align-items: center; gap: 8px;">🛒 מצרכים</h3>
+                        <div id="ingredientsList"></div>
+                    </div>
+                    
+                    <div id="instructionsArea" style="flex: 1.5; min-width: 320px;">
+                        <h3 style="color: var(--primary-color); margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 5px;">👩‍🍳 אופן ההכנה</h3>
+                        <div id="instructionsList"></div>
+                    </div>
+                </div>
+
+                <img id="viewContentImg" style="width:100%; border-radius:20px; display:none; margin-top:15px; cursor:zoom-in; box-shadow: var(--shadow-sm);">
+                <button class="btn-danger" id="deleteBtn" style="margin-top: 30px;">מחיקת מתכון</button>
+            </div>
+        </div>
+    </div>
+
+<div id="guideOverlay" class="guide-overlay" onclick="closeGuide()">
+        <div class="guide-card" onclick="event.stopPropagation()">
+            <h2 id="guideMainTitle">הדרכה לשימוש במחברת הדיגיטלית של אמא 📖</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px;">
+                ברוכה הבאה למחברת המתכונים שלך! האפליקציה הזו נבנתה במיוחד כדי שיהיה לך קל, נוח ומסודר לבשל את כל המטעמים שלך.
+                <br>הנה הסבר על כל מה שאפשר לעשות כאן:
+            </p>
+            
+            <div class="guide-grid">
+                <div class="guide-item"><span class="guide-icon">🔍</span><div class="guide-text"><strong>חיפוש חכם:</strong> חפשי לפי שם מנה, מצרך או ממי קיבלת את המתכון. אפשר גם ללחוץ על המיקרופון ולחפש בקול!</div></div>
+                <div class="guide-item"><span class="guide-icon">❤️</span><div class="guide-text"><strong>מועדפים:</strong> סמני מתכונים בלב כדי שישמרו ברשימה המועדפת עלייך. לחצי על הלב בסרגל העליון כדי לראות אותם.</div></div>
+                <div class="guide-item"><span class="guide-icon">➕</span><div class="guide-text"><strong>הוספת מתכון:</strong> הפלוס למטה מאפשר להקליד מתכון, לצלם דף מהמחברת או לשלב צילום יחד עם הקלדה.</div></div>
+                <div class="guide-item"><span class="guide-icon">✖️2</span><div class="guide-text"><strong>מחשבון מנות:</strong> בתוך המתכון תוכלי להכפיל או לחלק את הכמויות בלחיצה אחת - האפליקציה תחשב הכל לבד!</div></div>
+                <div class="guide-item"><span class="guide-icon">⏱️</span><div class="guide-text"><strong>טיימר:</strong> שעון מטבח מובנה. קבעי דקות והוא יצפצף לך כשהזמן יגמר.</div></div>
+                <div class="guide-item"><span class="guide-icon">⚖️</span><div class="guide-text"><strong>המרות:</strong> מחשבון להמרת מידות ומשקלים (כמה גרם זה כוס קמח?) - הכל נמצא שם.</div></div>
+                <div class="guide-item"><span class="guide-icon">🌙</span><div class="guide-text"><strong>מצב לילה:</strong> הירח למעלה הופך את המסך לכהה, נעים יותר לעיניים בשעות הערב וחוסך סוללה.</div></div>
+                <div class="guide-item"><span class="guide-icon">📥</span><div class="guide-text"><strong>גיבוי:</strong>    בהגדרות תוכלי להוסיף קטגוריות ולהסיר, גבות את כל המתכונים שלך לקובץ, כדי שאף מתכון לא ילך לאיבוד לעולם, לשחזר או לייבא קובץ שגובה.</div></div>
+            </div>
+            
+            <button class="btn-primary" onclick="closeGuide()" style="margin-top: 20px;">הבנתי, תודה!</button>
+        </div>
+    </div>
+
+    <div id="timerPanel" class="timer-overlay" onclick="hideTimer()">
+        <div class="timer-card" onclick="event.stopPropagation()">
+            <div id="timerNormalContent">
+                <div class="timer-close" onclick="hideTimer()">✕</div>
+                <div class="timer-icon">⏱️</div>
+                <h3 style="margin-top:0; color:var(--text-color);">טיימר מטבח</h3>
+                <div id="timerDisplay" class="timer-display">00:00</div>
+                <div id="timerInputGroup">
+                    <input type="number" id="timerMin" placeholder="כמה דקות?" min="1">
+                    <button class="btn-primary start-btn" onclick="startTimer()">התחילי לספור ➔</button>
+                </div>
+                <div id="activeTimerControls" style="display:none; margin-top: 15px;">
+                     <button onclick="cancelTimer()" style="background:none; border:1px solid var(--text-muted); color:var(--text-muted); padding:8px; border-radius:10px; width:100%; cursor:pointer;">ביטול ספירה ✖</button>
+                </div>
+            </div>
+            <div id="alarmContent" style="display:none;">
+                <div class="timer-icon" style="font-size:60px;">🔔</div>
+                <h2 style="color:#FF4757;">הזמן נגמר!</h2>
+                <button class="btn-danger stop-btn" onclick="stopTimer()" style="font-size:24px; padding:20px; margin-top:10px; width:100%;">להפסיק צלצול 🛑</button>
+            </div>
+        </div>
+    </div>
+<div id="smartConfirmOverlay" class="guide-overlay" onclick="closeSmartDialog()">
+        <div class="timer-card" onclick="event.stopPropagation()" style="width: 350px; padding: 25px; text-align: right;">
+            <h3 id="smartConfirmTitle" style="color: var(--primary-color); margin-top: 0; font-size: 22px;"></h3>
+            <p id="smartConfirmMsg" style="color: var(--text-muted); line-height: 1.5; font-size: 16px; margin-bottom: 25px;"></p>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <button id="smartConfirmKeep" class="btn-primary" style="background: var(--primary-color);">לשלב (גם וגם)</button>
+                <button id="smartConfirmReplace" class="btn-danger" style="background: #ff6b6b;">להחליף (למחוק את הישן)</button>
+                <button class="btn-secondary" onclick="closeSmartDialog()" style="background: #eee; color: #333; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px;">ביטול</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
