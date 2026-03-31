@@ -271,3 +271,21 @@ body.dark-mode #ingredientsArea h3, body.dark-mode #instructionsArea h3 {
     color: white !important; 
     box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
 }
+/* תצוגה מקדימה של הלוגו במסך הוספה/עריכה */
+.image-preview-container {
+    width: 170px; /* גודל זהה לכרטיסייה */
+    height: 170px;
+    margin: 15px auto;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #E3D7C8;
+    background-color: var(--card-bg);
+    display: none; /* יופעל ב-JS */
+}
+
+.image-preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

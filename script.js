@@ -247,8 +247,7 @@ function saveRecipe() {
     
     if(curId) r.id = curId;
     db.transaction(STORE,'readwrite').objectStore(STORE).put(r).onsuccess = () => { hideScreens(); loadRecipes(); };
-}
-function previewImg(input, tid) {
+}function previewImg(input, tid) {
     if (!input.files[0]) return;
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -260,31 +259,45 @@ function previewImg(input, tid) {
             canvas.width = w; canvas.height = h;
             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
             const data = canvas.toDataURL('image/jpeg', 0.7);
-            if(tid === 'coverPreview') curCov = data; else curCont = data;
-            const p1 = document.getElementById(tid); if(p1){ p1.src = data; p1.style.display = 'block'; }
-            if(tid === 'contentPreview') {
-                const p2 = document.getElementById('contentPreviewMixed'); if(p2) p2.src = data;
+            
+            // --- התיקון שלנו: מציג את המסגרת המעוצבת ומכניס את התמונה ---
+            if(tid === 'coverPreview') {
+                curCov = data;
+                const container = document.getElementById('coverPreviewContainer');
+                const cImg = document.getElementById('coverPreview');
+                cImg.src = data;
+                if(container) container.style.display = 'block'; 
+            } else {
+                curCont = data;
+                const p1 = document.getElementById(tid);
+                if(p1) { p1.src = data; p1.style.display = 'block'; }
+                if(tid === 'contentPreview') {
+                    const p2 = document.getElementById('contentPreviewMixed'); if(p2) p2.src = data;
+                }
             }
         };
         img.src = e.target.result;
     };
     reader.readAsDataURL(input.files[0]);
 }
-
 function setContentType(t) { recipeType = t; document.getElementById('btnTypeText').classList.toggle('active', t === 'text'); document.getElementById('btnTypeImage').classList.toggle('active', t === 'image'); document.getElementById('typeTextContainer').style.display = t === 'text' ? 'block' : 'none'; document.getElementById('typeImageContainer').style.display = t === 'image' ? 'block' : 'none'; }
-
 function openAddMode() {
     curId = null; curCov = null; curCont = null;
     document.getElementById('addScreenTitle').innerText = 'מתכון חדש 📝';
     document.querySelectorAll('#addScreen input, #addScreen textarea').forEach(i => i.value = '');
-    document.getElementById('recipeTags').value = ''; // מנקה את התגיות הישנות
-    document.getElementById('coverPreview').style.display = 'none';
+    document.getElementById('recipeTags').value = ''; 
+    
+    // --- התיקון שלנו: מסתירים רק את המסגרת, ומאפסים את התמונה ---
+    const covCont = document.getElementById('coverPreviewContainer');
+    if(covCont) covCont.style.display = 'none';
+    const cImg = document.getElementById('coverPreview');
+    if(cImg) { cImg.src = ''; cImg.style.display = 'block'; } // התמונה חייבת לחזור להיות מוצגת!
+    
     document.getElementById('contentPreview').style.display = 'none';
     updateEditUIMixed(false);
     setContentType('text');
     openScreen('addScreen');
 }
-
 function openEditMode() {
     db.transaction(STORE).objectStore(STORE).get(curId).onsuccess = (e) => {
         const r = e.target.result;
@@ -292,14 +305,25 @@ function openEditMode() {
         document.getElementById('recipeTitle').value = r.title;
         document.getElementById('recipeCategory').value = r.category;
         document.getElementById('recipeSource').value = r.source || '';
-        document.getElementById('recipeTags').value = r.tags || ''; // טוען את התגיות הקיימות
+        document.getElementById('recipeTags').value = r.tags || ''; 
         if (r.text) {
             const parts = r.text.split(/\n---\n/);
             document.getElementById('recipeIngredients').value = parts[0] || '';
             document.getElementById('recipeInstructions').value = parts[1] || '';
         }
         curCov = r.cover; curCont = r.contentImg;
-        const c1 = document.getElementById('coverPreview'); if(curCov && c1){ c1.src = curCov; c1.style.display = 'block'; } else if(c1){ c1.style.display = 'none'; }
+        
+        // --- זה החלק החדש שמטפל בתמונה המוקטנת בעריכה ---
+        const cContainer = document.getElementById('coverPreviewContainer');
+        const cImg = document.getElementById('coverPreview');
+        if(curCov && cImg && cContainer) { 
+            cImg.src = curCov; 
+            cContainer.style.display = 'block'; 
+        } else if(cContainer) { 
+            cContainer.style.display = 'none'; 
+        }
+        // ---------------------------------------------------
+
         const c2 = document.getElementById('contentPreview'); if(curCont && c2){ c2.src = curCont; c2.style.display = 'block'; } else if(c2){ c2.style.display = 'none'; }
         updateEditUIMixed(curCont && r.type === 'text');
         setContentType(r.type);

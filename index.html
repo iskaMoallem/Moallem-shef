@@ -116,9 +116,11 @@
                 <input type="text" id="recipeSource" placeholder="ממי המתכון? (למשל: דודה גניה, הרבנית קנייבסקי...)" style="margin-bottom:10px;">
                 <input type="text" id="recipeTags" placeholder="תגיות (למשל: חלבי, מהיר, לשבת...)" style="width:100%; padding:12px; margin-bottom:15px; border:2px solid #eee; border-radius:10px; font-family:inherit; font-size:16px; box-sizing:border-box;">
                 <button class="btn-primary" style="margin:10px 0; background:#eee; color:#333;" onclick="document.getElementById('coverInput').click()">📷 צילום מנה מוכנה</button>
-                <input type="file" id="coverInput" style="display:none" onchange="previewImg(this, 'coverPreview')">
-                <img id="coverPreview" style="width:100%; display:none; border-radius:15px; margin-top:10px;">
-             
+<input type="file" id="coverInput" style="display:none" onchange="previewImg(this, 'coverPreview')">
+
+<div id="coverPreviewContainer" class="image-preview-container" style="display:none; width: 170px; height: 170px; margin: 15px auto; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid #E3D7C8; background-color: #fff;">
+    <img id="coverPreview" src="" style="width:100%; height:100%; object-fit:cover;">
+</div>
                 <div class="toggle-group">
                     <button id="btnTypeText" class="active" onclick="handleTypeChange('text')">📝 הקלדה</button>
                     <button id="btnTypeImage" onclick="handleTypeChange('image')">📸  צילום דף המתכון</button>
