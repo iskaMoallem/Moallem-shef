@@ -517,7 +517,20 @@ function deleteCategory(c) { if(confirm(`למחוק ${c}?`)) { categories = cate
 function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(allRecipes)],{type:'application/json'})); a.download='recipes_backup.json'; a.click(); }
 function importData(i) {
     const r = new FileReader();
-    r.onload = (e) => { JSON.parse(e.target.result).forEach(item => { delete item.id; db.transaction(STORE, 'readwrite').objectStore(STORE).add(item); }); alert("בוצע!"); loadRecipes(); hideScreens(); };
+    r.onload = (e) => {
+        try {
+            const data = JSON.parse(e.target.result);
+            data.forEach(item => { 
+                delete item.id; 
+                db.transaction(STORE, 'readwrite').objectStore(STORE).add(item); 
+            });
+            alert("השחזור בוצע בהצלחה!"); 
+            loadRecipes(); 
+            hideScreens();
+        } catch (error) {
+            alert("אופס! נראה שהקובץ לא תקין. ודאי שזהו קובץ הגיבוי (סיומת json).");
+        }
+    };
     r.readAsText(i.files[0]);
 }
 
