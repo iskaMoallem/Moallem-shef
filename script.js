@@ -358,13 +358,26 @@ function toggleFavoritesView() {
     filterRecipes(); 
 }
 function filterRecipes() {
-    const s = document.getElementById('searchInput').value.toLowerCase();
+    // שומרים את מה שהוקלד בדיוק כמו שהוא (עם אותיות גדולות/קטנות)
+    const rawSearch = document.getElementById('searchInput').value;
+    
+    // --- מנגנון סודי לאיפוס מסך הפתיחה ---
+    if (rawSearch === "ASDFJH8757'QW12PO09NB54") {
+        localStorage.removeItem('mom_app_installed');
+        alert('הופעל קוד סודי! 🤫 מסך הפתיחה יופיע בפעם הבאה שתפתחי את האפליקציה.');
+        document.getElementById('searchInput').value = ''; // מנקה את שורת החיפוש
+        filterRecipes(); // מרענן את הרשימה בחזרה כדי להציג את המתכונים
+        return;
+    }
+    // ----------------------------------------
+
+    // מכאן החיפוש הרגיל ממשיך כרגיל
+    const s = rawSearch.toLowerCase();
     const cat = document.getElementById('categoryFilter').value;
     const cards = document.querySelectorAll('.recipe-card');
     let foundInCat = 0, foundInGeneral = 0;
     
     allRecipes.forEach((r, i) => {
-        // חיפוש חכם שכולל: שם, טקסט, מקור ותגיות!
         const isMatch = r.title.toLowerCase().includes(s) || 
                         (r.text && r.text.toLowerCase().includes(s)) || 
                         (r.source && r.source.toLowerCase().includes(s)) ||
