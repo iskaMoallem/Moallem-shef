@@ -514,21 +514,50 @@ function filterCalc() {
 function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 function addCategory() { const n = prompt("שם קטגוריה:"); if(n) { categories.push(n); localStorage.setItem('recipeCats', JSON.stringify(categories)); setupApp(); } }
 function deleteCategory(c) { if(confirm(`למחוק ${c}?`)) { categories = categories.filter(x=>x!==c); localStorage.setItem('recipeCats', JSON.stringify(categories)); setupApp(); } }
-function exportData() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(allRecipes)],{type:'application/json'})); a.download='recipes_backup.json'; a.click(); }
+function exportData() { 
+    // אורזים גם את המתכונים וגם את הקטגוריות לאותו קובץ
+    const backupData = {
+        recipes: allRecipes,
+        categories: categories
+    };
+    
+    const a = document.createElement('a'); 
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(backupData)], {type:'application/json'})); 
+    a.download = 'recipes_backup.json'; 
+    a.click(); 
+}
 function importData(i) {
     const r = new FileReader();
-    r.onload = (e) => {
+    r.onload = (e) => { 
         try {
-            const data = JSON.parse(e.target.result);
-            data.forEach(item => { 
+            const parsedData = JSON.parse(e.target.result);
+            let recipesToImport = [];
+
+            // בדיקה: האם זה גיבוי ישן (מערך) או גיבוי חדש (אובייקט עם קטגוריות)?
+            if (Array.isArray(parsedData)) {
+                recipesToImport = parsedData; // תמיכה בקבצים ישנים
+            } else {
+                recipesToImport = parsedData.recipes || [];
+                
+                // אם יש קטגוריות בקובץ הגיבוי, נשחזר גם אותן
+                if (parsedData.categories && Array.isArray(parsedData.categories)) {
+                    categories = parsedData.categories;
+                    localStorage.setItem('recipeCats', JSON.stringify(categories));
+                    setupApp(); // מרענן את רשימת הקטגוריות במסכים
+                }
+            }
+
+            // שחזור המתכונים למסד הנתונים
+            recipesToImport.forEach(item => { 
                 delete item.id; 
                 db.transaction(STORE, 'readwrite').objectStore(STORE).add(item); 
-            });
-            alert("השחזור בוצע בהצלחה!"); 
+            }); 
+            
+            alert("הגיבוי שוחזר בהצלחה!"); 
             loadRecipes(); 
-            hideScreens();
+            hideScreens(); 
         } catch (error) {
-            alert("אופס! נראה שהקובץ לא תקין. ודאי שזהו קובץ הגיבוי (סיומת json).");
+            alert("אופס! נראה שהקובץ שניסית להעלות אינו קובץ גיבוי תקין.");
         }
     };
     r.readAsText(i.files[0]);
