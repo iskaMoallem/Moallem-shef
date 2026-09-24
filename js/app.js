@@ -336,7 +336,21 @@ function _bindGlobalEvents() {
     });
 
     // 8. חיפוש
-    document.getElementById('searchInput')?.addEventListener('input', () => {
+    document.getElementById('searchInput')?.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        
+        // --- הקוד הסודי להפעלת מסך ה"תתחדשי" ---
+        if (val === 'אמא תתחדשי') {
+            if (typeof openGuide === 'function') {
+                openGuide(true); // מקפיץ את המסך החגיגי מיד
+            }
+            localStorage.removeItem('hasSeenWelcome'); // מוחק את הזיכרון, כדי שזה יקפוץ לה אוטומטית גם כשהיא תדליק את הטאבלט!
+            e.target.value = ''; // מנקה את שורת החיפוש כאילו לא נכתב כלום
+            window.applyFilters(); // מרענן את רשימת המתכונים
+            return;
+        }
+        // ----------------------------------------
+
         window.applyFilters();
     });
 
