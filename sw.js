@@ -1,4 +1,5 @@
-const CACHE_NAME = 'mom-recipes-v6';
+const CACHE_NAME = 'mom-recipes-v7';
+
 const urlsToCache = [
   './',
   './index.html',
